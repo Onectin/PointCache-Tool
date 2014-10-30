@@ -1,0 +1,22 @@
+-- General --
+
+Pointcache Tool
+Version: 	0.1b
+Date:		01/11/2014
+Contact:	onectin@onectin.fr
+Licence: 	Gnu GPLv3
+
+
+-- Installation --
+
+1. Put the "pointCacheTool" in your default script directory.
+(In 3dsMax, see "Customize > Configure System Path > Additional Scripts" to know that directory.)
+2. Execute "pointcacheTool.ms" in 3dsMax
+3. Set the preferences
+4. Restart 3dsMax
+
+-- Usage --
+
+- Simply execute "pointcacheTool.ms"
+- You can find pointcacheTool in the UI category "#Onectin"
+More informations: www.onectin.fr/pointcache-tool

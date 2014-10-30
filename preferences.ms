@@ -1,3 +1,12 @@
+-- Pointcache Tool
+-- v0.1b
+-- 01/11/2014
+-- onectin@onectin.fr
+-- --------------------------
+-- preferences.ms
+
+
+-- Kill  any other window from PCT
 try(DestroyDialog ::_PCT_MainUi) catch()
 try(DestroyDialog ::_PCT_Preset) catch()
 try(DestroyDialog ::_PCT_Preferences) catch()
@@ -41,15 +50,16 @@ _optFilTT =
 ONE FILE PER FRAME: Generates one file per frame, which is lighter. (Recommanded)"
 
 _scriptDir = getDir #userScripts
+_macroDir = getDir #userMacros
 
 _PCT_dir = _scriptDir + "\\pointCacheTool"
 
 _tmpPrstDir = _PCT_dir + "\\presets\\"
 _tmpDbDir = _PCT_dir + "\\database\\"
-_iconsDir = _PCT_dir + "\\icons"
+_iconsDir = _PCT_dir + "\\img"
 
-_mainScript = _PCT_dir + "\\_PCT_main.ms"
-global _iniPref = _PCT_dir + "\\_PCT_prefs.ini"
+_mainScript = _PCT_dir + "\\pointcacheTool.ms"
+global _iniPref = _PCT_dir + "\\preferences.ini"
 
 
 _maxRootDir = getDir #scene
@@ -67,13 +77,11 @@ function FNupdateIconSrc _bool =
 	(
 		global _icons2File = _iconsDir + "\\PCT_darkIcons2.bmp"
 		global _iconsFile = _iconsDir + "\\PCT_darkIcons.bmp"
-		print "Dark"
 	)
 	else -- Bright
 	(
 		global _icons2File = _iconsDir + "\\PCT_brightIcons2.bmp"
 		global _iconsFile = _iconsDir + "\\PCT_brightIcons.bmp"
-		print "Bright"
 	)
 )
 
@@ -90,12 +98,37 @@ if _checkPrefFile.count == 0 then
 	if _checkPrstPath == false do makeDir _tmpPrstDir
 	if _checkPrstPath == false do makeDir _tmpDbDir
 
-	if  (doesFileExist _iniPref) == false do
-	(
-		_createPrefFile = createFile _iniPref
-		flush _createPrefFile
-		close _createPrefFile
-	)
+	--global _defdefaultCacheType = 	
+	global _defautoClose = 			false
+	global _defframeRange = 		1
+	global _defcustomRangeFrom = 	0
+	global _defcustomRangeTo = 		100
+	global _defappearance = 		2
+	global _deficons = 				1
+	global _defwinPos = 			true
+	global _defwinLastPos =			[50,50]
+	global _defcategories = 		#("DEFAULT")
+	global _defPCO_same = 			false
+	global _defPCO_EXP_typ = 		2
+	global _defPCO_EXP_mod = 		2
+	global _defPCO_EXP_tur = 		1
+	global _defPCO_EXP_val = 		0
+	global _defPCO_EXP_iso = 		1
+	global _defPCO_EXP_fil = 		2
+	global _defPCO_IMP_typ = 		2
+	global _defPCO_IMP_mod = 		1
+	global _defPCO_IMP_tur = 		3
+	global _defPCO_IMP_val = 		0
+	global _defPCO_IMP_iso = 		3
+	global _defPCO_IMP_fil = 		2
+
+	global _btnWidth = 328
+
+	_oldMacroFile = _PCT_dir + "\\pointcacheTool.mcr"
+	_newMacroFile = _macroDir + "\\pointcacheTool.mcr"
+	deleteFile _newMacroFile
+	copyFile _oldMacroFile _newMacroFile
+	deleteFile _oldMacroFile
 )
 else
 (
@@ -133,6 +166,8 @@ else
 	global _defPCO_IMP_val = 		execute(getIniSetting 	_iniPref "PointCache_Options" "import_pointcache_turbosmooth_overwrite_value")
 	global _defPCO_IMP_iso = 		execute(getIniSetting 	_iniPref "PointCache_Options" "import_pointcache_isolineDisplay")
 	global _defPCO_IMP_fil = 		execute(getIniSetting 	_iniPref "PointCache_Options" "import_pointcache_fileCount")
+
+	global _btnWidth = 160
 )
 
 
@@ -186,7 +221,7 @@ rollout _PCT_Preferences "Preferences" width:344 height:604
 	editText 		edtParsEx 			"" 						pos:[70,532] 	width:260 	height:24 enabled:false bold:true
 
 	button 			btnCancel 			"CANCEL" 				pos:[8,572] 	width:160 	height:24 tooltip:"Cancel..."
-	button 			btnSave 			"SAVE" 					pos:[176,572] 	width:160 	height:24 tooltip:"Save..."
+	button 			btnSave 			"SAVE" 					pos:[176,572] 	width:_btnWidth 	height:24 tooltip:"Save..."
 
 
 	rollout _PCT_PreferencesPCmod "Pointcache Options" width:336 height:406
@@ -216,7 +251,7 @@ rollout _PCT_Preferences "Preferences" width:344 height:604
 		button 			opt_btnCancel 	"Cancel" 				pos:[8,378] 	width:152 	height:24   tooltip:"Cancel (don't save)"
 		button 			opt_btnSave 	"Save" 					pos:[176,378] 	width:152 	height:24   tooltip:"Save"
 
-		function FNpointCacheOptionsSave =
+		function FNpointCacheOptionsSaveIn =
 		(
 			_defPCO_EXP_typ = opt_rdoExTyp.state
 			_defPCO_EXP_mod = opt_rdoExMod.state
@@ -262,7 +297,7 @@ rollout _PCT_Preferences "Preferences" width:344 height:604
 		
 		on opt_btnSave pressed do
 		(
-			FNpointCacheOptionsSave()
+			FNpointCacheOptionsSaveIn()
 			destroyDialog _PCT_PreferencesPCmod
 		)
 
@@ -427,6 +462,41 @@ rollout _PCT_Preferences "Preferences" width:344 height:604
 		)
 	)
 	
+	function FNpointCacheOptionsSave =
+		(
+			_defPCO_EXP_typ = _PCT_PreferencesPCmod.opt_rdoExTyp.state
+			_defPCO_EXP_mod = _PCT_PreferencesPCmod.opt_rdoExMod.state
+			_defPCO_EXP_tur = _PCT_PreferencesPCmod.opt_rdoExTur.state
+			_defPCO_EXP_val = _PCT_PreferencesPCmod.opt_spnExTur.value
+			_defPCO_EXP_iso = _PCT_PreferencesPCmod.opt_rdoExIso.state
+			_defPCO_EXP_fil = _PCT_PreferencesPCmod.opt_rdoExFil.state
+
+			_defPCO_IMP_typ = _PCT_PreferencesPCmod.opt_rdoImTyp.state
+			_defPCO_IMP_mod = _PCT_PreferencesPCmod.opt_rdoImMod.state
+			_defPCO_IMP_tur = _PCT_PreferencesPCmod.opt_rdoImTur.state
+			_defPCO_IMP_val = _PCT_PreferencesPCmod.opt_spnImTur.value
+			_defPCO_IMP_iso = _PCT_PreferencesPCmod.opt_rdoImIso.state
+			_defPCO_IMP_fil = _PCT_PreferencesPCmod.opt_rdoImFil.state
+
+			_defPCO_same 	= _PCT_PreferencesPCmod.opt_btnSame.checked
+
+			setIniSetting _iniPref "PointCache_Options" "export_pointcache_type" (_defPCO_EXP_typ as string)
+			setIniSetting _iniPref "PointCache_Options" "export_pointcache_modifier" (_defPCO_EXP_mod as string)
+			setIniSetting _iniPref "PointCache_Options" "export_pointcache_turbosmooth" (_defPCO_EXP_tur as string)
+			setIniSetting _iniPref "PointCache_Options" "export_pointcache_turbosmooth_overwrite_value" (_defPCO_EXP_val as string)
+			setIniSetting _iniPref "PointCache_Options" "export_pointcache_isolineDisplay" (_defPCO_EXP_iso as string)
+			setIniSetting _iniPref "PointCache_Options" "export_pointcache_fileCount" (_defPCO_EXP_fil as string)
+
+			setIniSetting _iniPref "PointCache_Options" "import_pointcache_type" (_defPCO_IMP_typ as string)
+			setIniSetting _iniPref "PointCache_Options" "import_pointcache_modifier" (_defPCO_IMP_mod as string)
+			setIniSetting _iniPref "PointCache_Options" "import_pointcache_turbosmooth" (_defPCO_IMP_tur as string)
+			setIniSetting _iniPref "PointCache_Options" "import_pointcache_turbosmooth_overwrite_value" (_defPCO_IMP_val as string)
+			setIniSetting _iniPref "PointCache_Options" "import_pointcache_isolineDisplay" (_defPCO_IMP_iso as string)
+			setIniSetting _iniPref "PointCache_Options" "import_pointcache_fileCount" (_defPCO_IMP_fil as string)
+
+			setIniSetting _iniPref "PointCache_Options" "same_for_export_and_import" (_defPCO_same as string)
+		)
+	
 
 	function FNsave =
 	(
@@ -466,6 +536,7 @@ rollout _PCT_Preferences "Preferences" width:344 height:604
 		setIniSetting _iniPref "SEQ_SHOT" "sequence_digits" (_seqDigits as string)
 		setIniSetting _iniPref "SEQ_SHOT" "shot_prefix" (_shotPrefix as string)
 		setIniSetting _iniPref "SEQ_SHOT" "shot_digits" (_shotDigits as string)
+
 	)
 
 	function FNmajExample =
@@ -529,6 +600,7 @@ rollout _PCT_Preferences "Preferences" width:344 height:604
 			btnDeletePreset.images = 	undefined
 			btnCancel.images = 			undefined
 			btnSave.images = 			undefined
+			btnCacheOptions.images = 	undefined
 		)
 	)
 
@@ -536,14 +608,25 @@ rollout _PCT_Preferences "Preferences" width:344 height:604
 	(
 		if _firstLaunch == true then
 		(
-			 btnCancel.enabled = false
+			btnCancel.enabled = false
+			btnCancel.visible = false
+			btnSave.pos = [8,572]
 			edtDbPath.text = _tmpDbDir
+			chkAutoClose.checked = _defautoClose
+			rdoFrameRange.state = _defframeRange
+			spnFromFrame.value = _defcustomRangeFrom
+			spnToFrame.value = _defcustomRangeTo
+			rdoButtons.state = _defappearance
+			rdoIcons.state = _deficons
+			chkMemorize.checked = _defwinPos
+			_winLastPos = _defwinLastPos
+			lbxAssetTypes.items = _defcategories
+			FNmajIcon()
 		)
 		else
 		(
 			edtDbPath.text = _defdbDir
 			edtCachePath.text = _defcacheDir
-			--rdoDefaultType.state = _defdefaultCacheType
 			chkAutoClose.checked = _defautoClose
 			rdoFrameRange.state = _defframeRange
 			spnFromFrame.value = _defcustomRangeFrom
@@ -659,48 +742,68 @@ rollout _PCT_Preferences "Preferences" width:344 height:604
 
 	on btnCancel pressed do
 	(
-		_checkDefCachePath = ((dotnetclass "System.IO.Directory").exists edtCachePath.text)
-		_checkDefDbPath = ((dotnetclass "System.IO.Directory").exists edtDbPath.text)
-
-		if _checkDefCachePath == false then
-		(
-			messageBox "Default Pointcache folder is invalid."
-		)
-		else
-		(
-			if _checkDefDbPath == false then
-			(
-				messageBox "Default Database folder is invalid."
-			)
-			else
-			(
-				destroyDialog _PCT_Preferences
-				fileIn _mainScript
-			)
-		)
+		destroyDialog _PCT_Preferences
+		fileIn _mainScript
 	)
 
 	on btnSave pressed do
 	(
 		_checkDefCachePath = ((dotnetclass "System.IO.Directory").exists edtCachePath.text)
 		_checkDefDbPath = ((dotnetclass "System.IO.Directory").exists edtDbPath.text)
+		_checkCategroies = lbxAssetTypes.items
 
-		if _checkDefCachePath == false then
+		_valid = true
+
+		_message = "The following issues have been encountered:\n\n"
+		if _checkDefCachePath == false do
 		(
-			messageBox "Default Pointcache folder is invalid."
+			_message = _message + "- Default Pointcache folder is invalid.\n"
+			_valid = false
 		)
-		else
+		if _checkDefDbPath == false do
 		(
-			if _checkDefDbPath == false then
-			(
-				messageBox "Default Database folder is invalid."
-			)
-			else
-			(
-				FNsave()
-				destroyDialog _PCT_Preferences
-				fileIn _mainScript
-			)
+			_message = _message + "- Default Database folder is invalid.\n"
+			_valid = false
+		)
+
+		if _checkCategroies.count == 0 do
+		(
+			_message = _message + "- At least one category must be created.\n"
+			_valid = false
+		)
+
+		if edtParsSeqPref.text == "" or edtParsSeqPref.text == undefined do
+		(
+			_message = _message + "- You have to specify a sequence prefix.\n"
+			_valid = false
+		)
+
+		if edtParsShotPref.text == "" or edtParsShotPref.text == undefined do
+		(
+			_message = _message + "- You have to specify a shot prefix.\n"
+			_valid = false
+		)
+
+		if spnParsSeqDig.value == 0 do
+		(
+			_message = _message + "- At least one digit for the sequence is necessary.\n"
+			_valid = false
+		)
+
+		if spnParsShotDig.value == 0 do
+		(
+			_message = _message + "- At least one digit for the shot is necessary.\n"
+			_valid = false
+		)
+
+		if _valid == false do messageBox _message title:"Pointcache Tool" beep:false
+
+		if _valid == true do
+		(
+			FNsave()
+			FNpointCacheOptionsSave()
+			destroyDialog _PCT_Preferences
+			fileIn _mainScript
 		)
 		
 	)

@@ -1,6 +1,16 @@
+-- Pointcache Tool
+-- v0.1b
+-- 01/11/2014
+-- onectin@onectin.fr
+-- --------------------------
+-- pointcacheTool.ms
+
+
+-- Kill  any other window from PCT
 try(DestroyDialog ::_PCT_MainUi) catch()
 try(DestroyDialog ::_PCT_Preset) catch()
 try(DestroyDialog ::_PCT_Preferences) catch()
+try(DestroyDialog ::_PCT_Preferences._PCT_PreferencesPCmod) catch()
 try(DestroyDialog ::_PCT_MainUi._PCT_Browse) catch()
 try(DestroyDialog ::_PCT_MainUi._PCT_Preset) catch()
 try(DestroyDialog ::_PCT_MainUi._PCT_Preferences) catch()
@@ -10,11 +20,11 @@ _scriptDir = getDir #userScripts
 _PCT_dir = _scriptDir + "\\pointCacheTool"
 
 _presetDir = _PCT_dir + "\\presets\\"
-_iconsDir = _PCT_dir + "\\icons"
+_iconsDir = _PCT_dir + "\\img"
 
-global _iniPref = _PCT_dir + "\\_PCT_prefs.ini"
-_prefScript = _PCT_dir + "\\_PCT_prefs.ms"
-_aboutImg = _iconsDir + "\\ban002.jpg"
+global _iniPref = _PCT_dir + "\\preferences.ini"
+_prefScript = _PCT_dir + "\\preferences.ms"
+_aboutImg = _iconsDir + "\\about.jpg"
 
  _checkPrefFile = getFiles _iniPref
 
@@ -47,11 +57,17 @@ global _shot = ""
 
 global _exportQueue = #()
 
+function FNmsgBox _message =
+(
+	messageBox _message beep:false title:"Pointcache Tool"
+)
+
 
 if _checkPrefFile.count == 0 then
 (
-	_prefScript = _PCT_dir + "\\_PCT_prefs.ms"
-	_message = "Can't find preference file:\n" + _prefFile
+	_prefScript = _PCT_dir + "\\preferences.ms"
+	print _PCT_dir
+	_message = "Can't find preference file:\n" + _prefScript + "\n\n Let's configure it !"
 	FNmsgBox _message
 	fileIn _prefScript
 )
@@ -213,6 +229,7 @@ else
 				print _objExec
 				if _defPCO_EXP_mod == 1 do -- Use existing
 				(
+					print "Use Existing"
 					_modFound = false
 					for _theModifier in _objExec.modifiers where classOf _theModifier == Point_CacheSpacewarpModifier do
 					(
@@ -247,10 +264,13 @@ else
 
 					addmodifier _objExec _modifier
 
+					recordFile = _defPCO_EXP_fil as integer
+					recordFile = recordFile - 1
+
 					if _defPCO_EXP_typ == 1 do 
 					( 
 						_objExec.Point_Cache_Binding.fileName = _pcPath
-						_objExec.Point_Cache_Binding.fileCount = _defPCO_EXP_fil as integer
+						_objExec.Point_Cache_Binding.fileCount = recordFile
 						_objExec.Point_Cache_Binding.recordStart = _start
 						_objExec.Point_Cache_Binding.recordEnd = _end
 						_objExec.Point_Cache_Binding.relativeOffset = off
@@ -258,7 +278,7 @@ else
 					if _defPCO_EXP_typ == 2 do 
 					(
 						_objExec.Point_Cache.fileName = _pcPath
-						_objExec.Point_Cache.fileCount = _defPCO_EXP_fil as integer
+						_objExec.Point_Cache.fileCount = recordFile
 						_objExec.Point_Cache.recordStart = _start
 						_objExec.Point_Cache.recordEnd = _end
 						_objExec.Point_Cache.relativeOffset = off
@@ -273,7 +293,7 @@ else
 		)
 	)
 
-	function FNsetTurbosmooth _objects =
+	function FNsetTurbosmoothEXP _objects =
 	(
 		for i in _objects do 
 		(
@@ -281,22 +301,60 @@ else
 			if _defPCO_EXP_tur == 1 do-- Disable All
 			(
 				if _exeI.modifiers[#turbosmooth] != undefined do(_exeI.modifiers[#turbosmooth].enabled = false)
+				if _exeI.modifiers[#TurboSmoothPro] != undefined do(_exeI.modifiers[#TurboSmoothPro].enabled = false)
 			)
 			if _defPCO_EXP_tur == 2 do-- Enabled All
 			(
 				if _exeI.modifiers[#turbosmooth] != undefined do(_exeI.modifiers[#turbosmooth].enabled = true)
+				if _exeI.modifiers[#TurboSmoothPro] != undefined do(_exeI.modifiers[#TurboSmoothPro].enabled = true)
 			)
 			if _defPCO_EXP_tur == 4 do-- Custom value
 			(
 				if _exeI.modifiers[#turbosmooth] != undefined do(_exeI.modifiers[#turbosmooth].iterations = _defPCO_EXP_val)
+				if _exeI.modifiers[#TurboSmoothPro] != undefined do(_exeI.modifiers[#TurboSmoothPro].iterations = _defPCO_EXP_val)
 			)
 			if _defPCO_EXP_iso == 1 do-- Disable Isoline Display
 			(
 				if _exeI.modifiers[#turbosmooth] != undefined do(_exeI.modifiers[#turbosmooth].isolineDisplay = false)
+				if _exeI.modifiers[#TurboSmoothPro] != undefined do(_exeI.modifiers[#TurboSmoothPro].isolineDisplay = 1)
 			)
 			if _defPCO_EXP_iso == 2 do-- Enable Isoline Display
 			(
 				if _exeI.modifiers[#turbosmooth] != undefined do(_exeI.modifiers[#turbosmooth].isolineDisplay = true)
+				if _exeI.modifiers[#TurboSmoothPro] != undefined do(_exeI.modifiers[#TurboSmoothPro].isolineDisplay = 0)
+			)
+		)
+	)
+
+	function FNsetTurbosmoothIMP _objects =
+	(
+		for i in _objects do 
+		(
+			_exeI = execute ("$" + i)
+			if _defPCO_IMP_tur == 1 do-- Disable All
+			(
+				if _exeI.modifiers[#turbosmooth] != undefined do(_exeI.modifiers[#turbosmooth].enabled = false)
+				if _exeI.modifiers[#TurboSmoothPro] != undefined do(_exeI.modifiers[#TurboSmoothPro].enabled = false)
+			)
+			if _defPCO_IMP_tur == 2 do-- Enabled All
+			(
+				if _exeI.modifiers[#turbosmooth] != undefined do(_exeI.modifiers[#turbosmooth].enabled = true)
+				if _exeI.modifiers[#TurboSmoothPro] != undefined do(_exeI.modifiers[#TurboSmoothPro].enabled = true)
+			)
+			if _defPCO_IMP_tur == 4 do-- Custom value
+			(
+				if _exeI.modifiers[#turbosmooth] != undefined do(_exeI.modifiers[#turbosmooth].iterations = _defPCO_IMP_val)
+				if _exeI.modifiers[#TurboSmoothPro] != undefined do(_exeI.modifiers[#TurboSmoothPro].iterations = _defPCO_IMP_val)
+			)
+			if _defPCO_IMP_iso == 1 do-- Disable Isoline Display
+			(
+				if _exeI.modifiers[#turbosmooth] != undefined do(_exeI.modifiers[#turbosmooth].isolineDisplay = false)
+				if _exeI.modifiers[#TurboSmoothPro] != undefined do(_exeI.modifiers[#TurboSmoothPro].isolineDisplay = 0)
+			)
+			if _defPCO_IMP_iso == 2 do-- Enable Isoline Display
+			(
+				if _exeI.modifiers[#turbosmooth] != undefined do(_exeI.modifiers[#turbosmooth].isolineDisplay = true)
+				if _exeI.modifiers[#TurboSmoothPro] != undefined do(_exeI.modifiers[#TurboSmoothPro].isolineDisplay = 1)
 			)
 		)
 	)
@@ -344,15 +402,11 @@ else
 		)
 	)
 
-	function FNmsgBox _message =
-	(
-		messageBox _message beep:false title:"Pointcache Tool"
-	)
 
 	rollout _PCT_MainUi "Pointcache Tool"
 	(
-		checkbutton 	chkBtnEXPORT 				"EXPORT" 					pos:[8,8] 		width:134 	height:24 tooltip:"Toogle display export options"
-		checkbutton 	chkBtnIMPORT 				"IMPORT" 					pos:[146,8] 	width:134 	height:24 tooltip:"Toogle display import options"
+		checkbutton 	chkBtnEXPORT 				"EXPORT" 					pos:[8,8] 		width:134 	height:24 tooltip:"Toogle display export options" checked:true
+		checkbutton 	chkBtnIMPORT 				"IMPORT" 					pos:[146,8] 	width:134 	height:24 tooltip:"Toogle display import options" checked:true
 
 		groupBox 		grpAsset 					"Asset" 					pos:[8,38] 		width:272 	height:184
 		radioButtons 	rdoAssetMethod				"" 							pos:[16,54] 	width:262 	height:16 labels:#("By categories", "By detection", "By name") columns:3 default:1
@@ -367,7 +421,7 @@ else
 		checkbutton 	btnMngPreset 				"Manage" 					pos:[208,192] 	width:64 	height:24 tooltip:"Manage presets"
 
 		listBox 		lbxDetAsset 				"" 							pos:[16,102] 	width:256 	height:6
-		label 			lblDetAssetAuto 			"Auto." 					pos:[230,80] 	width:30 	height:16
+		label 			lblDetAssetAuto 			"Auto." 					pos:[230,80] 	width:30 	height:16 tooltip:"Warning: this features"
 		checkbox 		chkDetAssetAuto 			"" 							pos:[210,80] 	width:16 	height:16
 		button 			btnDetAsset 				"Detect" 					pos:[16,78] 	width:190 	height:21 tooltip:"Detect"
 
@@ -501,8 +555,8 @@ else
 			infoList = #()
 			for i in _listDbFiles do
 			(
-				--i = filterstring i ".oct"
-				i = trimright i ".oct"
+				i = trimright i "oct"
+				i = trimright i "."
 				i = filterstring i "\\"
 				iCount = i.count
 				infoList = append infoList i[iCount]
@@ -510,15 +564,61 @@ else
 			lbxCatAssetIm.items = infoList	
 		)
 
-		function FNimportPointCache _meshArray _assetName _modType =
+		function FNimportPointCache _meshArray _assetName =
 		(
-			
+
+			FNsetTurbosmoothIMP _meshArray
+
 			_selectedSeq = ddlSeqIm.selected
 			_selectedShot = ddlShotIm.selected
 	
 			_currentCachePath = _defcacheDir + _selectedSeq + "\\" + _selectedShot + "\\"
 	
-			if _modType == "OSM" then
+			-- MODIFIER: OSM --
+
+			if _defPCO_IMP_typ == 1 do 
+			(
+				_modClass = Point_CacheSpacewarpModifier
+				_modifier = undefined
+				_modifier = Point_CacheSpacewarpModifier()
+			)
+			if _defPCO_IMP_typ == 2 do 
+			(
+				_modClass = Point_Cache
+				_modifier = undefined
+				_modifier = Point_Cache()
+			)
+
+			_recordFile = _defPCO_EXP_fil as integer
+			_recordFile = _recordFile - 1
+
+			for i in _meshArray do
+				(
+					i = "$" + i
+					i = execute i
+					if i != undefined do
+					(
+						_objName = i.name
+						-- Pointcache filepath
+						_currentObjCacheFile = _currentCachePath + _assetName + "\\" + _objName + "\\" + _objName + ".xml"
+
+						if _defPCO_IMP_mod == 2 do -- ADD NEW PC MOD
+						(
+							addmodifier i _modifier -- (_modifier)
+						)
+
+						for _pcMod in i.modifiers where classOf _pcMod == _modClass do
+						(
+							_pcMod.fileName = _currentObjCacheFile
+							_pcMod.fileCount = _recordFile
+						)
+					)
+				)
+
+
+			/*-----------------------------------------------------
+			-----------------------------------------------------
+			if _defPCO_IMP_typ == 2 then
 			(
 				for i in _meshArray do
 				(
@@ -526,6 +626,7 @@ else
 					i = execute i
 					if i != undefined do
 					(
+						
 						_objName = i.name
 						_currentObjCacheFile = _currentCachePath + _assetName + "\\" + _objName + "\\" + _objName + ".xml"
 
@@ -539,7 +640,8 @@ else
 
 				)
 			)
-			else
+			-- MODIFIER: WSM --
+			else 
 			(
 				for i in _meshArray do
 				(
@@ -562,7 +664,9 @@ else
 					)
 
 				)
-			)	
+			)
+			-------------------------------------------------------	
+			-----------------------------------------------------*/
 		)
 
 		function FNrefreshImportUI =
@@ -1205,9 +1309,9 @@ else
 				chkBtnEXPORT.images = #(_iconBTNexport,_iconBTNexport,2,1,2,1,2)
 			)
 
-			rdoAssetMethod.state = defToogleAssetSel
-			btnMngPreset.checked = defToogleAsset
-			chkDetAssetAuto.checked = defAutoDet
+			if defToogleAssetSel != OK do rdoAssetMethod.state = defToogleAssetSel
+			if defToogleAsset != OK do btnMngPreset.checked = defToogleAsset
+			if defAutoDet != OK do chkDetAssetAuto.checked = defAutoDet
 			if defExportToogle != OK do chkBtnEXPORT.checked = defExportToogle
 			if defImportToogle != OK do chkBtnIMPORT.checked = defImportToogle
 
@@ -1506,7 +1610,7 @@ else
 				if  _gapFrames >= 0 then
 				(			
 					FNsetPC _assetName _assetPath _exportStart _exportEnd _assetObjArray
-					FNsetTurbosmooth _assetObjArray
+					FNsetTurbosmoothEXP _assetObjArray
 					FNrecordPC _assetObjArray
 					FNcreateDbFile _defdbDir _exportSeq _exportShot _assetName
 		
@@ -1544,16 +1648,9 @@ else
 			_objToMerge = execute _objToMerge
 			_assetName = lbxCatAssetIm.selected
 			
-			if rdoPcTypeImport.state == 1 do
-			(
-				_modType = "WSM"
-			)
-			if rdoPcTypeImport.state == 2 do 
-			(
-				_modType = "OSM"
-			)
+
 				
-			FNimportPointCache _objToMerge _assetName _modType
+			FNimportPointCache _objToMerge _assetName
 		)
 
 		on btnAbout pressed do
