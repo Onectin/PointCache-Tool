@@ -9,7 +9,7 @@ Licence: 	Gnu GPLv3
 
 -- Installation --
 
-1. Put the "pointCacheTool" in your default script directory.
+1. Put the "pointCacheTool" folder in your default script directory.
 (In 3dsMax, see "Customize > Configure System Path > Additional Scripts" to know that directory.)
 2. Execute "pointcacheTool.ms" in 3dsMax
 3. Set the preferences
